@@ -31,6 +31,7 @@ import AIPage from "./pages/aipage";
 import FloatingAI from "./components/FloatingAI";
 
 import { supabase } from "./lib/supabase";
+import BecomeMentor from "./pages/BecomeMentor";
 
 const queryClient = new QueryClient();
 
@@ -163,6 +164,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route path="/become-mentor" element={<BecomeMentor />} />
 
               <Route
                 path="/discover"

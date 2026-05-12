@@ -61,7 +61,6 @@ const handleLogout = async () => {
         { to: "/discover", label: "Discover", icon: Compass },
         { to: "/sessions", label: "Sessions", icon: Calendar },
         { to: "/messages", label: "Messages", icon: MessageCircle },
-        { to: "/notifications", label: "Alerts", icon: Bell },
         { to: "/leaderboard", label: "Ranks", icon: Trophy },
         ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: Shield }] : []),
       ]

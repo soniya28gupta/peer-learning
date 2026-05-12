@@ -26,12 +26,9 @@ const Messages = ({ user }: any) => {
 
   const currentUserId = user?.id;
 
-  console.log("USER:", user);
-  console.log("CURRENT USER ID:", currentUserId);
-
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  // auto scroll
+  // Auto Scroll
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth",
@@ -42,7 +39,7 @@ const Messages = ({ user }: any) => {
     scrollToBottom();
   }, [messages]);
 
-  // fetch all users
+  // Fetch Users
   useEffect(() => {
     if (!currentUserId) {
       setLoading(false);
@@ -54,9 +51,6 @@ const Messages = ({ user }: any) => {
         .from("profiles")
         .select("*")
         .neq("id", currentUserId);
-
-      console.log("USERS:", data);
-      console.log("USERS ERROR:", error);
 
       if (!error && data) {
         setUsers(data);
@@ -72,7 +66,7 @@ const Messages = ({ user }: any) => {
     getUsers();
   }, [currentUserId]);
 
-  // fetch messages
+  // Fetch Messages
   const fetchMessages = async () => {
     if (!selectedUser || !currentUserId) {
       setLoading(false);
@@ -89,9 +83,6 @@ const Messages = ({ user }: any) => {
       )
       .order("created_at", { ascending: true });
 
-    console.log("MESSAGES:", data);
-    console.log("MESSAGES ERROR:", error);
-
     if (!error && data) {
       setMessages(data);
     }
@@ -99,6 +90,7 @@ const Messages = ({ user }: any) => {
     setLoading(false);
   };
 
+  // Realtime
   useEffect(() => {
     fetchMessages();
 
@@ -133,11 +125,11 @@ const Messages = ({ user }: any) => {
     };
   }, [selectedUser, currentUserId]);
 
-  // send message
+  // Send Message
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedUser) return;
 
-    const { error } = await supabase.from("messages").insert([
+    await supabase.from("messages").insert([
       {
         sender_id: currentUserId,
         receiver_id: selectedUser.id,
@@ -145,51 +137,65 @@ const Messages = ({ user }: any) => {
       },
     ]);
 
-    console.log("SEND ERROR:", error);
-
     setNewMessage("");
   };
 
   return (
-    <div className="h-screen bg-[#07120d] text-white flex overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-[#020617] via-[#020B1F] to-[#050014] text-white relative">
+
+      {/* Background Effects */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(34,211,238,0.12),transparent)]" />
+
+      <div className="absolute top-0 right-0 h-[500px] w-[500px] rounded-full bg-purple-500/10 blur-3xl" />
+
+      <div className="absolute bottom-0 left-0 h-[400px] w-[400px] rounded-full bg-cyan-500/10 blur-3xl" />
+
       {/* SIDEBAR */}
-      <div className="w-[320px] border-r border-white/10 bg-white/5 backdrop-blur-xl p-4 hidden md:flex flex-col">
-        {/* SEARCH */}
-        <div className="flex items-center bg-white/10 rounded-2xl px-4 py-3 mb-6">
-          <Search size={18} className="text-gray-400" />
+      <div className="relative z-10 hidden w-[320px] flex-col border-r border-white/10 bg-white/5 p-4 backdrop-blur-2xl md:flex">
+
+        {/* Search */}
+        <div className="mb-6 flex items-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-xl">
+          <Search size={18} className="text-slate-400" />
 
           <input
             type="text"
             placeholder="Search chats..."
-            className="bg-transparent outline-none ml-3 w-full text-sm"
+            className="ml-3 w-full bg-transparent text-sm outline-none placeholder:text-slate-500"
           />
         </div>
 
-        {/* USERS */}
+        {/* Users */}
         <div className="flex flex-col gap-3 overflow-y-auto">
+
           {users.map((user) => (
             <div
               key={user.id}
               onClick={() => setSelectedUser(user)}
-              className={`p-4 rounded-2xl cursor-pointer transition-all duration-300 border ${
+              className={`cursor-pointer rounded-3xl border p-4 transition-all duration-300 ${
                 selectedUser?.id === user.id
-                  ? "bg-green-500/20 border-green-500 shadow-lg shadow-green-500/20"
-                  : "bg-white/5 border-transparent hover:bg-white/10"
+                  ? "border-cyan-400 bg-cyan-500/10 shadow-[0_0_30px_rgba(34,211,238,0.2)]"
+                  : "border-white/5 bg-white/5 hover:border-cyan-500/20 hover:bg-white/10"
               }`}
             >
               <div className="flex items-center gap-3">
+
                 <div className="relative">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-green-400 to-emerald-600 flex items-center justify-center font-bold">
+
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 font-bold text-black">
                     {user.name?.charAt(0).toUpperCase()}
                   </div>
 
-                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border border-black"></div>
+                  <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full border border-black bg-cyan-400"></div>
                 </div>
 
                 <div>
-                  <h3 className="font-semibold">{user.name}</h3>
+                  <h3 className="font-semibold text-white">
+                    {user.name}
+                  </h3>
 
-                  <p className="text-xs text-green-400">Online</p>
+                  <p className="text-xs text-cyan-400">
+                    Online
+                  </p>
                 </div>
               </div>
             </div>
@@ -198,35 +204,42 @@ const Messages = ({ user }: any) => {
       </div>
 
       {/* CHAT AREA */}
-      <div className="flex-1 flex flex-col">
+      <div className="relative z-10 flex flex-1 flex-col">
+
         {/* TOP BAR */}
-        <div className="h-20 border-b border-white/10 bg-white/5 backdrop-blur-xl px-6 flex items-center justify-between">
+        <div className="flex h-20 items-center justify-between border-b border-white/10 bg-white/5 px-6 backdrop-blur-2xl">
+
           {selectedUser && (
             <>
               <div className="flex items-center gap-4">
+
                 <div className="relative">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-green-400 to-emerald-600 flex items-center justify-center font-bold">
+
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 font-bold text-black">
                     {selectedUser.name?.charAt(0).toUpperCase()}
                   </div>
 
-                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border border-black"></div>
+                  <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full border border-black bg-cyan-400"></div>
                 </div>
 
                 <div>
-                  <h2 className="font-semibold text-lg">
+                  <h2 className="text-lg font-semibold text-white">
                     {selectedUser.name}
                   </h2>
 
-                  <p className="text-sm text-green-400">Online</p>
+                  <p className="text-sm text-cyan-400">
+                    Online
+                  </p>
                 </div>
               </div>
 
               <div className="flex gap-4">
-                <button className="p-3 rounded-xl bg-white/10 hover:bg-white/20 transition">
+
+                <button className="rounded-2xl border border-white/10 bg-white/5 p-3 transition hover:bg-white/10">
                   <Phone size={18} />
                 </button>
 
-                <button className="p-3 rounded-xl bg-white/10 hover:bg-white/20 transition">
+                <button className="rounded-2xl border border-white/10 bg-white/5 p-3 transition hover:bg-white/10">
                   <Video size={18} />
                 </button>
               </div>
@@ -234,15 +247,18 @@ const Messages = ({ user }: any) => {
           )}
         </div>
 
-        {/* MESSAGES */}
+        {/* Messages */}
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+
           {loading ? (
             <div className="space-y-4">
-              <div className="h-14 w-52 rounded-2xl bg-white/10 animate-pulse"></div>
-              <div className="h-14 w-72 rounded-2xl bg-white/10 animate-pulse ml-auto"></div>
+
+              <div className="h-14 w-52 animate-pulse rounded-2xl bg-white/10"></div>
+
+              <div className="ml-auto h-14 w-72 animate-pulse rounded-2xl bg-white/10"></div>
             </div>
           ) : messages.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-gray-400">
+            <div className="flex h-full items-center justify-center text-slate-400">
               No messages yet
             </div>
           ) : (
@@ -253,21 +269,27 @@ const Messages = ({ user }: any) => {
                 <div
                   key={msg.id}
                   className={`flex ${
-                    isSender ? "justify-end" : "justify-start"
+                    isSender
+                      ? "justify-end"
+                      : "justify-start"
                   }`}
                 >
                   <div
-                    className={`max-w-[70%] px-5 py-3 rounded-3xl shadow-lg transition-all duration-300 ${
+                    className={`max-w-[70%] rounded-3xl px-5 py-3 shadow-xl transition-all duration-300 ${
                       isSender
-                        ? "bg-green-500 text-black rounded-br-md"
-                        : "bg-white/10 backdrop-blur-lg rounded-bl-md"
+                        ? "rounded-br-md bg-gradient-to-r from-cyan-400 to-blue-500 text-black"
+                        : "rounded-bl-md border border-white/10 bg-white/10 backdrop-blur-xl"
                     }`}
                   >
-                    <p className="text-sm">{msg.message}</p>
+                    <p className="text-sm">
+                      {msg.message}
+                    </p>
 
                     <p
-                      className={`text-[10px] mt-2 ${
-                        isSender ? "text-black/60" : "text-gray-400"
+                      className={`mt-2 text-[10px] ${
+                        isSender
+                          ? "text-black/60"
+                          : "text-slate-400"
                       }`}
                     >
                       {new Date(msg.created_at).toLocaleTimeString([], {
@@ -285,14 +307,18 @@ const Messages = ({ user }: any) => {
         </div>
 
         {/* INPUT */}
-        <div className="p-5 border-t border-white/10 bg-white/5 backdrop-blur-xl">
-          <div className="flex items-center gap-3 bg-white/10 rounded-2xl p-3">
+        <div className="border-t border-white/10 bg-white/5 p-5 backdrop-blur-2xl">
+
+          <div className="flex items-center gap-3 rounded-3xl border border-white/10 bg-white/5 p-3 backdrop-blur-xl">
+
             <input
               type="text"
               placeholder="Type a message..."
-              className="flex-1 bg-transparent outline-none text-sm px-2"
+              className="flex-1 bg-transparent px-2 text-sm outline-none placeholder:text-slate-500"
               value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
+              onChange={(e) =>
+                setNewMessage(e.target.value)
+              }
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   sendMessage();
@@ -302,9 +328,12 @@ const Messages = ({ user }: any) => {
 
             <button
               onClick={sendMessage}
-              className="bg-green-500 hover:bg-green-400 transition-all duration-300 p-3 rounded-xl shadow-lg shadow-green-500/30"
+              className="rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-500 p-3 shadow-[0_0_25px_rgba(34,211,238,0.35)] transition-all duration-300 hover:scale-105"
             >
-              <Send size={18} className="text-black" />
+              <Send
+                size={18}
+                className="text-black"
+              />
             </button>
           </div>
         </div>
