@@ -53,6 +53,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
+    const loadingFallback = window.setTimeout(() => {
+      if (mounted) {
+        setLoading(false);
+      }
+    }, 5000);
 
     const initializeSession = async () => {
       try {
@@ -63,12 +68,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         setSession(session);
         setUser(session?.user ?? null);
+        setLoading(false);
 
         if (session?.user) {
-          await ensureProfileExists(session.user);
+          ensureProfileExists(session.user);
         }
       } catch (err) {
         console.error("Unexpected session initialization error:", err);
+        setSession(null);
+        setUser(null);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -77,16 +85,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     initializeSession();
 
     const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
         if (!mounted) return;
 
         try {
           setSession(session);
           setUser(session?.user ?? null);
+          setLoading(false);
 
-          // only attempt to ensure profile on initial login to prevent redundant network calls.
           if (session?.user && _event === "SIGNED_IN") {
-            await ensureProfileExists(session.user);
+            setTimeout(() => {
+              ensureProfileExists(session.user);
+            }, 0);
           }
         } catch (err) {
           console.error("Auth state change error:", err);
@@ -98,6 +108,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       mounted = false;
+      window.clearTimeout(loadingFallback);
       listener.subscription.unsubscribe();
     };
   }, [ensureProfileExists]);
