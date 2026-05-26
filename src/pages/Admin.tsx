@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 interface UserProfile {
   id: string;
@@ -76,8 +77,17 @@ const Admin = () => {
   const calculateActiveTodayCount = (userList: UserProfile[]): number => {
     const now = new Date();
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+  return userList.filter(u => {
+    if (!u.last_active_at) return false;
+    const lastActive = new Date(u.last_active_at);
+    return lastActive >= oneDayAgo;
+  }).length;
+};
+
     return userList.filter((u) => u.last_active_at && new Date(u.last_active_at) >= oneDayAgo).length;
   };
+
 
   const filteredUsers = users.filter(
     (u) =>
