@@ -123,58 +123,13 @@ export async function getStreakData(): Promise<StreakData> {
  */
 export async function updateDailyStreak(): Promise<{ streak: number; xpEarned: number }> {
   try {
-    const userId = await getCurrentUserId();
-    if (!userId) throw new Error("Not authenticated");
-
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("streak, last_active, points")
-      .eq("id", userId)
-      .single();
-
-    if (error || !profile) throw error ?? new Error("No profile");
-
-    const today = getTodayKey();
-    const prevStreak = profile.streak ?? 0;
-    const lastActive = profile.last_active ?? "";
-    const totalXP = profile.points ?? 0;
-
-    let newStreak = prevStreak;
-    let xpEarned = 0;
-
-    if (lastActive === today) {
-      // Already updated today — no change
-      newStreak = prevStreak > 0 ? prevStreak : 1;
-    } else if (lastActive) {
-      const diffDays = Math.round(
-        (new Date(today).getTime() - new Date(lastActive).getTime()) /
-          (1000 * 60 * 60 * 24)
-      );
-      if (diffDays === 1) {
-        newStreak = prevStreak + 1;
-        xpEarned = calculateStreakXP(newStreak);
-      } else {
-        newStreak = 1;
-        xpEarned = calculateStreakXP(newStreak);
-      }
-    } else {
-      newStreak = 1;
-      xpEarned = calculateStreakXP(newStreak);
-    }
-
-    await supabase
-      .from("profiles")
-      .update({
-        streak: newStreak,
-        last_active: today,
-        points: totalXP + xpEarned,
-      })
-      .eq("id", userId);
+    const { data, error } = await (supabase as any).rpc("update_daily_streak");
+    if (error) throw error;
 
     // Invalidate cache so next getStreakData() fetches fresh data
     clearCache();
 
-    return { streak: newStreak, xpEarned };
+    return { streak: data.streak, xpEarned: data.xpEarned };
   } catch {
     return { streak: 0, xpEarned: 0 };
   }
@@ -190,47 +145,17 @@ export async function restoreStreak(): Promise<{
   newStreak?: number;
 }> {
   try {
-    const userId = await getCurrentUserId();
-    if (!userId) throw new Error("Not authenticated");
-
-    const today = getTodayKey();
-    const data = await getStreakData();
-
-    if (!data.canRestore) {
-      return {
-        success: false,
-        message: "You already used restoration today. Try again tomorrow!",
-      };
-    }
-
-    if (data.totalXP < 100) {
-      return {
-        success: false,
-        message: `You need 100 XP to restore. You have ${data.totalXP} XP.`,
-      };
-    }
-
-    const newStreak = data.streak + 1;
-    const newXP = data.totalXP - 100;
-
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        streak: newStreak,
-        points: newXP,
-        restoration_used_today: true,
-        restoration_date: today,
-      })
-      .eq("id", userId);
-
+    const { data, error } = await (supabase as any).rpc("restore_user_streak");
     if (error) throw error;
 
-    clearCache();
+    if (data.success) {
+      clearCache();
+    }
 
     return {
-      success: true,
-      message: `Streak restored! 🔥 New streak: ${newStreak} days`,
-      newStreak,
+      success: data.success,
+      message: data.message,
+      newStreak: data.newStreak,
     };
   } catch {
     return {

@@ -149,8 +149,7 @@ const Discover = () => {
       .map((u) => ({
         ...u,
         score: getMatchScore(u),
-      }))
-      .filter((u) => u.score > 0);
+      }));
 
     matched.sort((a, b) => b.score - a.score);
 

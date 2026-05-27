@@ -60,14 +60,14 @@ const calculateCompatibilityScore = (currentUser, otherUser) => {
   return Math.min(score, 100);
 };
 
+const PAGE_SIZE = 20;
+
 // 🚀 Get Recommended Study Partners
 export const getRecommendedPartners = async (req, res) => {
   try {
     const currentUserEmail = req.user.email;
 
-    const currentUser = await User.findOne({
-    email: currentUserEmail,
-    });
+    const currentUser = await User.findOne({ email: currentUserEmail });
 
     if (!currentUser) {
       return res.status(404).json({
@@ -76,41 +76,55 @@ export const getRecommendedPartners = async (req, res) => {
       });
     }
 
-    // Get all other users
-    const users = await User.find({
-      email: { $ne: currentUserEmail },
-    });
+    // Parse and clamp pagination parameters
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(PAGE_SIZE, Math.max(1, parseInt(req.query.limit, 10) || PAGE_SIZE));
+    const skip = (page - 1) * limit;
 
-    // Generate recommendations
-    const recommendations = users.map((user) => {
-      const compatibilityScore = calculateCompatibilityScore(
-        currentUser,
-        user
-      );
-
-      return {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        skills: user.skills,
-        interests: user.interests,
-        learningGoals: user.learningGoals,
-        availability: user.availability,
-        learningStyle: user.learningStyle,
-        preferredLanguage: user.preferredLanguage,
-        timezone: user.timezone,
-        compatibilityScore,
-      };
-    });
-
-    // Sort highest compatibility first
-    recommendations.sort(
-      (a, b) => b.compatibilityScore - a.compatibilityScore
+    // Exclude the caller's email and only project fields needed for scoring.
+    // Email is intentionally omitted from the projection to prevent mass PII
+    // enumeration (resolves issue #146).
+    const users = await User.find(
+      { email: { $ne: currentUserEmail } },
+      {
+        _id: 1,
+        name: 1,
+        skills: 1,
+        interests: 1,
+        learningGoals: 1,
+        availability: 1,
+        learningStyle: 1,
+        preferredLanguage: 1,
+        timezone: 1,
+      }
     );
+
+    // Score all users in memory, then paginate the sorted result so the page
+    // boundary is stable across requests.
+    const scored = users.map((user) => ({
+      _id: user._id,
+      name: user.name,
+      skills: user.skills,
+      interests: user.interests,
+      learningGoals: user.learningGoals,
+      availability: user.availability,
+      learningStyle: user.learningStyle,
+      preferredLanguage: user.preferredLanguage,
+      timezone: user.timezone,
+      compatibilityScore: calculateCompatibilityScore(currentUser, user),
+    }));
+
+    scored.sort((a, b) => b.compatibilityScore - a.compatibilityScore);
+
+    const totalCount = scored.length;
+    const recommendations = scored.slice(skip, skip + limit);
 
     res.status(200).json({
       success: true,
       count: recommendations.length,
+      total: totalCount,
+      page,
+      totalPages: Math.ceil(totalCount / limit),
       recommendations,
     });
   } catch (error) {

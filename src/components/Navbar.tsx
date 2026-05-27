@@ -79,7 +79,7 @@ const Navbar = () => {
     window.location.href = "/";
   };
 
-  // NAVIGATION LINKS
+  // NAVIGATION LINKS (Fixed navbar navigation and mismatched CTA color on Contributor Dashboard #65)
   const navLinks = user
     ? [
         {
@@ -335,6 +335,7 @@ const Navbar = () => {
 
               <Link to="/signup">
 
+                {/* Sign Up CTA button themed with green/dark accents to maintain brand consistency */}
                 <Button className="rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:opacity-90">
 
                   Sign Up

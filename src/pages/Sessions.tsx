@@ -16,6 +16,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/useAuth";
 import VideoRoom from "@/components/VideoRoom";
+import { useAwardXP } from "@/hooks/useAwardXP";
 import { CreateSessionDialog } from "@/components/CreateSessionDialog";
 import { generateICS } from "@/utils/calendar";
 
@@ -27,6 +28,7 @@ const tabs = [
 
 const Sessions = () => {
   const { user } = useAuth();
+  const { mutate: awardXP } = useAwardXP();
 
   const [sessions, setSessions] = useState<any[]>([]);
   const [filteredSessions, setFilteredSessions] =
@@ -412,7 +414,10 @@ const Sessions = () => {
               
               {selectedSession && !isVideoActive && (
                 <button 
-                  onClick={() => setIsVideoActive(true)}
+                  onClick={() => {
+                    setIsVideoActive(true);
+                    awardXP({ activity: 'session_join' });
+                  }}
                   className="flex items-center gap-2 bg-gradient-to-r from-cyan-400 to-purple-500 text-black px-4 py-2 rounded-2xl font-bold hover:opacity-90 transition"
                 >
                   <Video size={18} /> Join Video

@@ -4,31 +4,9 @@ export const rewardXP = async (
   userId: string,
   amount: number
 ) => {
-  const { data } = await supabase
-    .from("leaderboard")
-    .select("*")
-    .eq("user_id", userId)
-    .single();
-
-  if (!data) return;
-
-  const updatedXP = data.xp + amount;
-
-  await supabase
-    .from("leaderboard")
-    .update({
-      xp: updatedXP,
-      badges: [getBadge(updatedXP)],
-    })
-    .eq("user_id", userId);
+  // We pass _amount to the secure RPC. The RPC uses auth.uid() 
+  // so it guarantees the user can only award XP to themselves (if allowed by logic)
+  // or it could be modified to accept an admin role in the future.
+  await (supabase as any).rpc("increment_user_xp", { _amount: amount });
 };
 
-const getBadge = (xp: number) => {
-  if (xp >= 2000) return "Legend";
-  if (xp >= 1000) return "Master";
-  if (xp >= 500) return "Pro";
-  if (xp >= 200) return "Advanced";
-  if (xp >= 50) return "Learner";
-
-  return "Beginner";
-};

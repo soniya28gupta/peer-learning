@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 
-import { Camera, Save, Sparkles, User, Flame, Zap, Trophy } from "lucide-react";
+import { Camera, Save, Sparkles, User, Flame, Zap, Trophy, Lock } from "lucide-react";
 import StreakStats from "@/components/StreakStats";
 
 import {
   calculateLevel,
   getBadgeByXP,
   getAchievements,
+  ALL_BADGES,
+  ALL_ACHIEVEMENTS
 } from "../lib/gamification";
 
 const avatars = [
@@ -268,45 +270,107 @@ const EditProfile = () => {
               whileHover={{
                 scale: 1.03,
               }}
-              className="rounded-3xl border border-cyan-400/10 bg-cyan-500/5 p-6"
+              className="rounded-3xl border border-cyan-400/10 bg-cyan-500/5 p-6 md:col-span-1"
             >
               <div className="flex items-center gap-3 mb-3">
                 <Zap className="text-cyan-400" />
-
                 <h2 className="font-bold text-lg">Total XP</h2>
               </div>
-
               <p className="text-4xl font-bold">{profile.xp || 0} XP ⚡</p>
-
               <p className="text-sm text-gray-400 mt-2">
                 Earn XP by joining sessions
               </p>
-            </motion.div>
-            <motion.div
-              whileHover={{ scale: 1.03 }}
-              className="rounded-3xl border border-yellow-400/10 bg-yellow-500/5 p-6"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <Trophy className="text-yellow-400" />
-
-                <h2 className="font-bold text-lg">Achievements</h2>
-              </div>
-
-              <p className="text-2xl font-bold">Level {profile.level}</p>
-
-              <p className="mt-2">Badge: {profile.badge}</p>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                {profile.achievements?.map((a: string, i: number) => (
-                  <span
-                    key={i}
-                    className="px-3 py-1 rounded-full bg-cyan-500/20 text-sm"
-                  >
-                    {a}
-                  </span>
-                ))}
+              <div className="mt-6 pt-6 border-t border-cyan-400/10">
+                <p className="text-sm text-gray-400 mb-1">Current Level</p>
+                <p className="text-2xl font-bold text-cyan-300">Level {profile.level}</p>
               </div>
             </motion.div>
+          </div>
+
+          {/* TROPHY ROOM */}
+          <div className="mt-12">
+            <div className="flex items-center gap-3 mb-6">
+              <Trophy className="text-yellow-400" size={28} />
+              <h2 className="text-3xl font-bold">Trophy Room</h2>
+            </div>
+            
+            <div className="space-y-10">
+              {/* BADGES */}
+              <div>
+                <h3 className="text-xl font-semibold mb-4 text-gray-300">Milestone Badges</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {ALL_BADGES.map((badge) => {
+                    const isUnlocked = profile.xp >= badge.xpRequired;
+                    return (
+                      <motion.div
+                        key={badge.id}
+                        whileHover={isUnlocked ? { scale: 1.05 } : {}}
+                        className={`relative overflow-hidden rounded-2xl p-5 border transition-all ${
+                          isUnlocked 
+                            ? "bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.15)]" 
+                            : "bg-white/5 border-white/5 opacity-60 grayscale"
+                        }`}
+                      >
+                        {!isUnlocked && (
+                          <div className="absolute top-3 right-3 text-gray-500">
+                            <Lock size={16} />
+                          </div>
+                        )}
+                        <div className="text-4xl mb-3">{badge.name.split(' ')[0]}</div>
+                        <h4 className={`font-bold ${isUnlocked ? "text-yellow-400" : "text-gray-400"}`}>
+                          {badge.name.substring(badge.name.indexOf(' ') + 1)}
+                        </h4>
+                        <p className="text-xs text-gray-400 mt-1">{badge.description}</p>
+                        
+                        {/* Progress Bar for Locked */}
+                        {!isUnlocked && (
+                          <div className="mt-3">
+                            <div className="w-full bg-black/50 rounded-full h-1.5 mb-1 overflow-hidden">
+                              <div 
+                                className="bg-gray-500 h-1.5 rounded-full" 
+                                style={{ width: `${Math.min(100, (profile.xp / badge.xpRequired) * 100)}%` }}
+                              />
+                            </div>
+                            <p className="text-[10px] text-right text-gray-500">{profile.xp} / {badge.xpRequired} XP</p>
+                          </div>
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* ACHIEVEMENTS */}
+              <div>
+                <h3 className="text-xl font-semibold mb-4 text-gray-300">Achievements</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {ALL_ACHIEVEMENTS.map((achievement) => {
+                    const isUnlocked = profile.xp >= achievement.xpRequired;
+                    return (
+                      <motion.div
+                        key={achievement.id}
+                        whileHover={isUnlocked ? { y: -5 } : {}}
+                        className={`rounded-2xl p-4 border flex flex-col items-center text-center transition-all ${
+                          isUnlocked 
+                            ? "bg-cyan-500/10 border-cyan-400/30 shadow-[0_0_15px_rgba(34,211,238,0.1)]" 
+                            : "bg-white/5 border-white/5 opacity-50 grayscale"
+                        }`}
+                      >
+                        <div className="text-3xl mb-2">{achievement.icon}</div>
+                        <h4 className={`font-bold text-sm ${isUnlocked ? "text-cyan-300" : "text-gray-500"}`}>
+                          {achievement.name}
+                        </h4>
+                        {!isUnlocked && (
+                          <div className="flex items-center gap-1 mt-2 text-[10px] text-gray-500 bg-black/30 px-2 py-1 rounded-md">
+                            <Lock size={10} /> {achievement.xpRequired} XP
+                          </div>
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* SAVE BUTTON */}
