@@ -131,6 +131,110 @@ export type Database = {
         }
         Relationships: []
       }
+      study_rooms: {
+        Row: {
+          id: string
+          topic: string
+          created_by: string | null
+          created_at: string
+          is_private: boolean
+        }
+        Insert: {
+          id?: string
+          topic: string
+          created_by?: string | null
+          created_at?: string
+          is_private?: boolean
+        }
+        Update: {
+          id?: string
+          topic?: string
+          created_by?: string | null
+          created_at?: string
+          is_private?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_rooms_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      study_room_messages: {
+        Row: {
+          id: string
+          room_id: string | null
+          profile_id: string | null
+          content: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          room_id?: string | null
+          profile_id?: string | null
+          content: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          room_id?: string | null
+          profile_id?: string | null
+          content?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_room_messages_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_room_messages_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "study_rooms"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      study_room_participants: {
+        Row: {
+          room_id: string
+          profile_id: string
+          joined_at: string
+        }
+        Insert: {
+          room_id: string
+          profile_id: string
+          joined_at?: string
+        }
+        Update: {
+          room_id?: string
+          profile_id?: string
+          joined_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_room_participants_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_room_participants_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "study_rooms"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       sessions: {
         Row: {
           created_at: string
@@ -204,6 +308,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      invite_to_study_room: {
+        Args: {
+          p_room_id: string
+          p_user_email: string
+        }
+        Returns: undefined
+      }
       tick_session_statuses: {
         Args: Record<PropertyKey, never>
         Returns: undefined
