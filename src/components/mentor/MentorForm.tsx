@@ -62,9 +62,16 @@ export default function MentorForm() {
   };
 
   const handleSubmit = async () => {
-    try {
-      setLoading(true);
+    setLoading(true);
 
+    let isTimeout = false;
+    const timeout = setTimeout(() => {
+      isTimeout = true;
+      setLoading(false);
+      alert("Submission timed out. Please check your network and try again.");
+    }, 10_000);
+
+    try {
       const { error } = await supabase
         .from("mentors")
         .insert([
@@ -79,17 +86,25 @@ export default function MentorForm() {
           },
         ]);
 
+      if (isTimeout) return;
+      clearTimeout(timeout);
+
       if (error) {
         console.error(error);
-        alert("Something went wrong!");
+        alert("Something went wrong: " + error.message);
         return;
       }
 
       setStep(4);
     } catch (err) {
+      if (isTimeout) return;
+      clearTimeout(timeout);
       console.error(err);
+      alert("Something went wrong. Please try again.");
     } finally {
-      setLoading(false);
+      if (!isTimeout) {
+        setLoading(false);
+      }
     }
   };
 

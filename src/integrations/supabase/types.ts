@@ -131,6 +131,62 @@ export type Database = {
         }
         Relationships: []
       }
+      portfolio_profiles: {
+        Row: {
+          achievements: Json
+          created_at: string
+          github_url: string
+          headline: string
+          id: string
+          is_published: boolean
+          learning_progress: Json
+          linkedin_url: string
+          profile_id: string
+          projects: Json
+          skills: string[]
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          achievements?: Json
+          created_at?: string
+          github_url?: string
+          headline?: string
+          id?: string
+          is_published?: boolean
+          learning_progress?: Json
+          linkedin_url?: string
+          profile_id: string
+          projects?: Json
+          skills?: string[]
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          achievements?: Json
+          created_at?: string
+          github_url?: string
+          headline?: string
+          id?: string
+          is_published?: boolean
+          learning_progress?: Json
+          linkedin_url?: string
+          profile_id?: string
+          projects?: Json
+          skills?: string[]
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_profiles_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sessions: {
         Row: {
           created_at: string
