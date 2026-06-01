@@ -202,7 +202,7 @@ const Discover = () => {
 
   // PRESENCE
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser?.id) return;
 
     const channel = supabase.channel('online-users', {
       config: {
@@ -227,7 +227,7 @@ const Discover = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUser]);
+  }, [currentUser?.id]);
 
   // Match scoring has been moved to the Node.js backend to prevent O(N) payload bloat and severe UI jank
 
