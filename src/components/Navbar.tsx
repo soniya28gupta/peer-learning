@@ -47,6 +47,19 @@ const Navbar = () => {
   const location = useLocation();
 
   useEffect(() => {
+    if (location.hash) {
+      const id = location.hash.slice(1);
+      const element = document.getElementById(id);
+      if (element) {
+        const timer = setTimeout(() => {
+          element.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [location.hash, location.pathname]);
+
+  useEffect(() => {
     const fetchProfile = async () => {
       if (!user) {
         setProfileName("");
@@ -191,7 +204,9 @@ const Navbar = () => {
 
             const Icon = link.icon;
 
-            const active = location.pathname === link.to;
+            const active =
+              location.pathname === link.to ||
+              (location.pathname + location.hash) === link.to;
 
             return (
               <Link

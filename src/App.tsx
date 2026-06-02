@@ -81,6 +81,12 @@ function AppContent() {
             path="/"
             element={user ? <Navigate to="/dashboard" replace /> : <WithNav><Index /></WithNav>}
           />
+          <Route path="/landing" element={<Navigate to="/" replace />} />
+          <Route path="/home" element={<Navigate to="/" replace />} />
+          <Route path="/landing-page" element={<Navigate to="/" replace />} />
+
+
+
 
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
@@ -318,7 +324,7 @@ function App() {
           <Toaster />
           <Sonner />
 
-          <BrowserRouter>
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <AuthProvider>
               <RoleProvider>
                 <AppContent />

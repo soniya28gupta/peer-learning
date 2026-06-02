@@ -1,4 +1,7 @@
-import { motion, useScroll } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { useScroll } from "framer-motion";
+
 import {
   ArrowRight,
   Users,
@@ -11,7 +14,6 @@ import {
   GraduationCap,
   Bot,
   Flame,
-  Moon,
   ChevronLeft,
   ChevronRight,
   BrainCircuit,
@@ -20,23 +22,13 @@ import {
   Rocket,
   Briefcase,
   Activity,
-  Menu,
-  X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 import { Link } from "react-router-dom";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useState, useEffect, useRef } from "react";
 import heroIllustration from "@/assets/hero-illustration.png";
+
 
 const features = [
   {
@@ -180,6 +172,11 @@ export default function Landing() {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const testimonialAutoScrollRef = useRef<number | null>(null);
   const testimonialPausedRef = useRef(false);
+
+  const [review, setReview] = useState("");
+  const [name, setName] = useState("");
+  const [rating, setRating] = useState(0);
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1800);
@@ -969,10 +966,10 @@ export default function Landing() {
                       type="button"
                       onClick={() => setRating(star)}
                       className={`text-4xl transition-all duration-300 ${
-                        rating >= star
-                          ? "text-yellow-400 drop-shadow-[0_0_12px_rgba(250,204,21,0.6)]"
-                          : "text-slate-500 hover:text-yellow-300"
-                      }`}
+  rating >= star
+    ? "text-yellow-400 drop-shadow-[0_0_12px_rgba(250,204,21,0.6)]"
+    : "text-slate-500 hover:text-yellow-300"
+}`}
                     >
                       ★
                     </motion.button>

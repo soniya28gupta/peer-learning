@@ -163,7 +163,10 @@ const Onboarding = () => {
             return (
               <Card
                 key={role.id}
-                className="border-white/10 bg-white/5 text-slate-100 transition hover:border-emerald-400/50 hover:bg-white/10"
+                onClick={() => selectedRole === null && handleRoleSelect(role)}
+                className={`border-white/10 bg-white/5 text-slate-100 cursor-pointer transition-all duration-300 hover:scale-[1.03] active:scale-[0.98] ${
+                  selectedRole === null ? "hover:border-emerald-400/50 hover:bg-white/10" : "opacity-60 cursor-not-allowed"
+                }`}
               >
                 <CardHeader>
                   <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-300">
@@ -177,7 +180,6 @@ const Onboarding = () => {
                 <CardContent>
                   <Button
                     type="button"
-                    onClick={() => void handleRoleSelect(role)}
                     disabled={selectedRole !== null}
                     className="w-full bg-emerald-500 text-slate-950 hover:bg-emerald-400"
                   >

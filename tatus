@@ -1,0 +1,159 @@
+warning: in the working copy of 'src/pages/ForgotPassword.tsx', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/src/pages/ForgotPassword.tsx b/src/pages/ForgotPassword.tsx[m
+[1mindex 401afbf..72456ab 100644[m
+[1m--- a/src/pages/ForgotPassword.tsx[m
+[1m+++ b/src/pages/ForgotPassword.tsx[m
+[36m@@ -1,13 +1,30 @@[m
+[31m-import { useState } from "react";[m
+ import { supabase } from "@/integrations/supabase/client";[m
+[32m+[m[32mimport { useState } from "react";[m
+[32m+[m[32mimport { Link } from "react-router-dom";[m
+[32m+[m[32mimport { motion } from "framer-motion";[m
+[32m+[m[32mimport { BookOpen, ArrowRight } from "lucide-react";[m
+[32m+[m
+[32m+[m[32mimport { Button } from "@/components/ui/button";[m
+[32m+[m[32mimport { Input } from "@/components/ui/input";[m
+[32m+[m[32mimport { useToast } from "@/hooks/use-toast";[m
+ [m
+ const ForgotPassword = () => {[m
+   const [email, setEmail] = useState("");[m
+[31m-  const [message, setMessage] = useState("");[m
+[32m+[m[32m  const [isLoading, setIsLoading] = useState(false);[m
+[32m+[m[32m  const [isSent, setIsSent] = useState(false);[m
+[32m+[m[32m  const [errorText, setErrorText] = useState("");[m
+[32m+[m[32m  const { toast } = useToast();[m
+ [m
+[31m-  const handleSubmit = async (e) => {[m
+[32m+[m[32m  const handleSubmit = async (e: React.FormEvent) => {[m
+     e.preventDefault();[m
+ [m
+[32m+[m[32m    if (!email.trim()) {[m
+[32m+[m[32m      setErrorText("Email is required");[m
+[32m+[m[32m      return;[m
+[32m+[m[32m    }[m
+[32m+[m[32m    setErrorText("");[m
+[32m+[m[32m    setIsLoading(true);[m
+[32m+[m
+     try {[m
+       // Use window.location.origin so the reset link works in every environment[m
+       // (localhost, staging, production) without any code change.[m
+[36m@@ -15,64 +32,149 @@[m [mconst ForgotPassword = () => {[m
+         redirectTo: `${window.location.origin}/reset-password`,[m
+       });[m
+ [m
+[32m+[m[32m      setIsLoading(false);[m
+[32m+[m
+       if (error) {[m
+[31m-        setMessage(error.message);[m
+[32m+[m[32m        toast({[m
+[32m+[m[32m          title: "Error sending reset link",[m
+[32m+[m[32m          description: error.message,[m
+[32m+[m[32m          variant: "destructive",[m
+[32m+[m[32m        });[m
+[32m+[m[32m        setErrorText(error.message);[m
+       } else {[m
+[31m-        setMessage("✅ Reset link sent! Check your email.");[m
+[32m+[m[32m        toast({[m
+[32m+[m[32m          title: "Reset link sent! 🚀",[m
+[32m+[m[32m          description: "Check your email for the password recovery link.",[m
+[32m+[m[32m        });[m
+[32m+[m[32m        setIsSent(true);[m
+       }[m
+[31m-    } catch (error) {[m
+[31m-      setMessage("Something went wrong");[m
+[32m+[m[32m    } catch (err) {[m
+[32m+[m[32m      setIsLoading(false);[m
+[32m+[m[32m      const errMsg = err instanceof Error ? err.message : "An unexpected error occurred.";[m
+[32m+[m[32m      toast({[m
+[32m+[m[32m        title: "Error sending reset link",[m
+[32m+[m[32m        description: errMsg,[m
+[32m+[m[32m        variant: "destructive",[m
+[32m+[m[32m      });[m
+[32m+[m[32m      setErrorText(errMsg);[m
+     }[m
+   };[m
+ [m
+   return ([m
+[31m-    <div style={styles.container}>[m
+[31m-      <h2>Forgot Password</h2>[m
+[31m-[m
+[31m-      <form onSubmit={handleSubmit} style={styles.form}>[m
+[31m-        <input[m
+[31m-          type="email"[m
+[31m-          placeholder="Enter your email"[m
+[31m-          required[m
+[31m-          onChange={(e) => setEmail(e.target.value)}[m
+[31m-          style={styles.input}[m
+[31m-        />[m
+[31m-[m
+[31m-        <button type="submit" style={styles.button}>[m
+[31m-          Send Reset Link[m
+[31m-        </button>[m
+[31m-      </form>[m
+[31m-[m
+[31m-      {message && <p>{message}</p>}[m
+[32m+[m[32m    <div className="relative flex min-h-screen overflow-hidden bg-[#020817] text-white">[m
+[32m+[m[32m      {/* GRID BACKGROUND */}[m
+[32m+[m[32m      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />[m
+[32m+[m
+[32m+[m[32m      {/* GLOW EFFECTS */}[m
+[32m+[m[32m      <div className="absolute top-0 left-0 h-[500px] w-[500px] bg-cyan-500/20 blur-[140px]" />[m
+[32m+[m[32m      <div className="absolute bottom-0 right-0 h-[500px] w-[500px] bg-blue-600/20 blur-[140px]" />[m
+[32m+[m
+[32m+[m[32m      {/* CENTERED CARD */}[m
+[32m+[m[32m      <div className="flex w-full items-center justify-center px-6 py-12 relative z-10">[m
+[32m+[m[32m        <motion.div[m
+[32m+[m[32m          initial={{ opacity: 0, y: 40, scale: 0.98 }}[m
+[32m+[m[32m          animate={{ opacity: 1, y: 0, scale: 1 }}[m
+[32m+[m[32m          transition={{ duration: 0.6 }}[m
+[32m+[m[32m          className="w-full max-w-md rounded-3xl border border-cyan-400/10 bg-white/5 p-8 backdrop-blur-2xl shadow-[0_0_50px_rgba(34,211,238,0.15)]"[m
+[32m+[m[32m        >[m
+[32m+[m[32m          <div className="mb-7 text-cyan-400">[m
+[32m+[m[32m            <Link to="/login" className="cursor-pointer">[m
+[32m+[m[32m              ← Back to Login[m
+[32m+[m[32m            </Link>[m
+[32m+[m[32m          </div>[m
+[32m+[m
+[32m+[m[32m          {/* LOGO */}[m
+[32m+[m[32m          <div className="mb-8 text-center">[m
+[32m+[m[32m            <Link to="/" className="inline-flex items-center gap-3">[m
+[32m+[m[32m              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 shadow-[0_0_20px_rgba(34,211,238,0.5)]">[m
+[32m+[m[32m                <BookOpen className="h-6 w-6 text-black" />[m
+[32m+[m[32m              </div>[m
+[32m+[m[32m              <span className="text-3xl font-bold tracking-tight bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent">[m
+[32m+[m[32m                PeerLearn[m
+[32m+[m[32m              </span>[m
+[32m+[m[32m            </Link>[m
+[32m+[m
+[32m+[m[32m            <h2 className="mt-8 text-3xl font-bold text-white">[m
+[32m+[m[32m              Forgot Password[m
+[32m+[m[32m            </h2>[m
+[32m+[m
+[32m+[m[32m            <p className="mt-2 text-slate-400">[m
+[32m+[m[32m              Recover your futuristic learning account[m
+[32m+[m[32m            </p>[m
+[32m+[m[32m          </div>[m
+[32m+[m
+[32m+[m[32m          {isSent ? ([m
+[32m+[m[32m            <motion.div[m
+[32m+[m[32m              initial={{ opacity: 0, scale: 0.95 }}[m
+[32m+[m[32m              animate={{ opacity: 1, scale: 1 }}[m
+[32m+[m[32m              className="text-center space-y-4"[m
+[32m+[m[32m            >[m
+[32m+[m[32m              <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 text-3xl">[m
+[32m+[m[32m                ✉️[m
+[32m+[m[32m              </div>[m
+[32m+[m[32m              <h3 className="text-xl font-semibold text-white">Check your email</h3>[m
+[32m+[m[32m              <p className="text-slate-300 text-sm leading-relaxed">[m
+[32m+[m[32m                We've sent a password reset link to <span className="font-semibold text-cyan-300">{email}</span>. Please click the link in the email to set a new password.[m
+[32m+[m[32m              </p>[m
+[32m+[m[32m              <div className="pt-4">[m
+[32m+[m[32m                <Link to="/login">[m
+[32m+[m[32m                  <Button className="h-12 w-full rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-black font-bold shadow-[0_0_20px_rgba(34,211,238,0.35)] hover:opacity-90">[m
+[32m+[m[32m                    Return to Login[m
+[32m+[m[32m                  </Button>[m
+[32m+[m[32m                </Link>[m
+[32m+[m[32m              </div>[m
+[32m+[m[32m            </motion.div>[m
+[32m+[m[32m          ) : ([m
+[32m+[m[32m     

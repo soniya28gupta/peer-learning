@@ -42,3 +42,6 @@ export const rateLimiter = (req, res, next) => {
   entry.count += 1;
   next();
 };
+
+export const protectedApiRateLimiter = rateLimiter;
+
