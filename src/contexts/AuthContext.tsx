@@ -26,7 +26,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
    * Ensures user profile exists in database without overwriting existing data
    */
   const ensureProfileExists = useCallback(async (user: User) => {
-    if (isCreatingProfile.current) return;
+    if (isCreatingProfile.current) return null;
+
     try {
       isCreatingProfile.current = true;
       const profileData = {
@@ -54,14 +55,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) {
         console.error("Profile creation/upsert failed:", error.message);
       }
+
+      // Re-fetch after upsert to avoid race conditions where the subsequent
+      // onboarding check runs before the profile row becomes visible.
+      const { data: profileAfterUpsert, error: refetchError } = await supabase
+        .from("profiles")
+        .select("is_mentor, is_learner")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (refetchError) {
+        console.error("Failed to refetch profile after upsert:", refetchError.message);
+      }
+
+      return profileAfterUpsert ?? null;
     } catch (err) {
-      console.error("Unexpected error while creating profile:", err);
+      console.error("Unexpected error while creating/refetching profile:", err);
+      return null;
     } finally {
       setTimeout(() => {
         isCreatingProfile.current = false;
       }, 1000);
     }
   }, []);
+
 
   useEffect(() => {
     let mounted = true;
@@ -90,8 +107,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             .maybeSingle();
 
           if (!profile) {
-            await ensureProfileExists(session.user);
-            setNeedsOnboarding(true);
+            const ensuredProfile = await ensureProfileExists(session.user);
+            if (!ensuredProfile) {
+              setNeedsOnboarding(true);
+            } else {
+              setNeedsOnboarding(
+                ensuredProfile.is_mentor === false && ensuredProfile.is_learner === false
+              );
+            }
           } else {
             setNeedsOnboarding(
               profile.is_mentor === false && profile.is_learner === false
@@ -129,8 +152,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 .maybeSingle();
 
               if (!profile) {
-                await ensureProfileExists(session.user);
-                if (mounted) setNeedsOnboarding(true);
+                const ensuredProfile = await ensureProfileExists(session.user);
+                if (!ensuredProfile) {
+                  if (mounted) setNeedsOnboarding(true);
+                } else if (mounted) {
+                  setNeedsOnboarding(
+                    ensuredProfile.is_mentor === false && ensuredProfile.is_learner === false
+                  );
+                }
               } else if (mounted) {
                 setNeedsOnboarding(
                   profile.is_mentor === false && profile.is_learner === false
