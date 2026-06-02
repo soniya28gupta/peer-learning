@@ -12,6 +12,6 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 const router = express.Router();
 
 router.post("/ask", requireAuth, rateLimiter, asyncHandler(askAI));
-router.post("/generate-summary", asyncHandler(generateSessionSummary));
+router.post("/generate-summary", requireAuth, rateLimiter, asyncHandler(generateSessionSummary));
 
 export default router;

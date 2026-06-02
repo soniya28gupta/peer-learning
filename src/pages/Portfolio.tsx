@@ -254,6 +254,32 @@ const Portfolio = () => {
 
     setSaving(true);
 
+    const { data: existingSlugUser, error: slugCheckError } = await supabase
+      .from("portfolio_profiles")
+      .select("profile_id")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (slugCheckError) {
+      setSaving(false);
+      toast({
+        title: "Error checking URL",
+        description: "Failed to verify if the URL is available.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (existingSlugUser && existingSlugUser.profile_id !== user.id) {
+      setSaving(false);
+      toast({
+        title: "URL already taken",
+        description: "This public URL is already in use by someone else. Please choose another one.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const payload = {
       profile_id: user.id,
       slug,
