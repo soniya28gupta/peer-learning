@@ -1,7 +1,11 @@
 import express from "express";
 import { requireCronSecret } from "../middlewares/requireCronSecret.js";
+import {
+  dispatchPushNotifications,
+  sendSessionReminders,
+  sendMentorshipCheckinReminders,
+} from "../controllers/cronController.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { getSupabaseAdmin } from "../utils/supabase.js";
 
 const router = express.Router();
 
@@ -18,45 +22,19 @@ const router = express.Router();
 router.post(
   "/dispatch-notifications",
   requireCronSecret,
-  asyncHandler(async (req, res) => {
-    const supabase = getSupabaseAdmin();
+  asyncHandler(dispatchPushNotifications)
+);
 
-    if (!supabase) {
-      return res.status(503).json({ error: "Supabase is not configured." });
-    }
+router.post(
+  "/reminders",
+  requireCronSecret,
+  asyncHandler(sendSessionReminders)
+);
 
-    // Fetch pending notifications that haven't been dispatched yet
-    const { data: pending, error } = await supabase
-      .from("notifications")
-      .select("id, user_id, title, message")
-      .eq("dispatched", false)
-      .limit(100);
-
-    if (error) {
-      console.error("[cron] Failed to fetch pending notifications:", error);
-      return res.status(500).json({ error: "Failed to fetch pending notifications." });
-    }
-
-    if (!pending || pending.length === 0) {
-      return res.json({ dispatched: 0, message: "No pending notifications." });
-    }
-
-    // Mark as dispatched (idempotent — prevents duplicate sends on retry)
-    const ids = pending.map((n) => n.id);
-    const { error: updateError } = await supabase
-      .from("notifications")
-      .update({ dispatched: true })
-      .in("id", ids);
-
-    if (updateError) {
-      console.error("[cron] Failed to mark notifications as dispatched:", updateError);
-    }
-
-    res.json({
-      dispatched: pending.length,
-      message: `Successfully dispatched ${pending.length} notification(s).`,
-    });
-  })
+router.post(
+  "/mentorship-reminders",
+  requireCronSecret,
+  asyncHandler(sendMentorshipCheckinReminders)
 );
 
 export default router;
