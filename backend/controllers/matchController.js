@@ -1,6 +1,5 @@
 import { getSupabaseAdmin } from "../utils/supabase.js";
 import { getRelatedSkills } from "../utils/skillGraph.js";
-import { sanitizeProfiles } from "../utils/dto.js";
 
 // 📚 Calculate compatibility score purely for textual reasons now
 const calculateCompatibilityScore = (currentUser, otherUser) => {
@@ -115,7 +114,7 @@ export const getRecommendedPartners = async (req, res) => {
     }
 
     // Now format the 20 returned users with reasons
-    const rawRecommendations = (matchedUsers || []).map((user) => {
+    const recommendations = (matchedUsers || []).map((user) => {
       // We pass through calculateCompatibilityScore ONLY to get the rich reason string
       // The score is already calculated perfectly by the database.
       const result = calculateCompatibilityScore(currentUser, user);
@@ -130,9 +129,6 @@ export const getRecommendedPartners = async (req, res) => {
         reason: result.reasons[0] || "You have similar learning interests and compatible skills.",
       };
     });
-    
-    // Strict schema sanitization to prevent accidental PII leakage
-    const recommendations = sanitizeProfiles(rawRecommendations);
 
     // In a real paginated RPC, getting exact total Count requires a separate count query. 
     // We'll estimate or just provide length for now since counting 1M rows can also be slow.
@@ -155,11 +151,13 @@ export const getSupabaseDiscover = async (req, res) => {
     const userId = req.user.id;
     const search = req.query.search || "";
     const filter = req.query.filter || "All";
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
     const limit = Math.min(parseInt(req.query.limit, 10) || 100, 100);
+    const skip = (page - 1) * limit;
 
-    const supabase = getSupabaseAdmin();
+    const supabaseAdmin = getSupabaseAdmin();
 
-    const { data: currentUser, error: meError } = await supabase
+    const { data: currentUser, error: meError } = await supabaseAdmin
       .from("profiles")
       .select("*")
       .eq("id", userId)
@@ -169,11 +167,18 @@ export const getSupabaseDiscover = async (req, res) => {
       return res.status(404).json({ success: false, message: "User profile not found" });
     }
 
-    let query = supabase.from("profiles").select("*").neq("id", userId).limit(100);
+    let query = supabaseAdmin
+      .from("profiles")
+      .select("id, name, skills, interests, learning_goals, teach_subjects, learn_subjects, learning_style, preferred_language, timezone")
+      .neq("id", userId)
+      .range(skip, skip + limit - 1);
 
     if (search.trim()) {
-      const safeSearch = search.trim().replace(/"/g, '""');
-      query = query.or(`name.ilike."%${safeSearch}%",skills.ilike."%${safeSearch}%"`);
+      const safeSearch = search.trim().replace(/[^\w\s-]/g, "");
+      if (safeSearch) {
+        const pattern = `%${safeSearch.replace(/['"]/g, "")}%`;
+        query = query.or(`name.ilike."${pattern}",skills.ilike."${pattern}"`);
+      }
     }
 
     if (filter !== "All") {

@@ -1,4 +1,6 @@
+import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 
@@ -23,6 +25,7 @@ const avatars = [
 ];
 
 const EditProfile = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
   const [profile, setProfile] = useState<any>({
@@ -95,7 +98,7 @@ const EditProfile = () => {
     setLoading(false);
 
     if (!error) {
-      alert("Profile Updated Successfully 🚀");
+      toast.success("Profile updated successfully!");
     }
   };
 
@@ -126,7 +129,12 @@ const EditProfile = () => {
             </div>
 
             <h1 className="text-5xl font-bold mb-3">Edit Profile</h1>
-
+<button
+              onClick={() => navigate('/profile')}
+              className="inline-flex items-center gap-2 bg-white/5 border border-white/10 text-gray-300 px-4 py-2 rounded-full hover:border-cyan-400/50 hover:text-cyan-300 transition mt-2"
+            >
+              ← Back to Profile
+            </button>
             <p className="text-gray-400 text-lg">
               Build your learning identity 🚀
             </p>

@@ -66,7 +66,14 @@ export const chatSchemas = {
 export const aiSchemas = {
   askAI: {
     body: z.object({
-      question: z.string().trim().min(1).max(2000),
+      messages: z.array(
+        z.object({
+          role: z.string().optional(),
+          content: z.string().trim().min(1).max(4000),
+        })
+      ).min(1).max(50),
+      systemPrompt: z.string().optional(),
+      model: z.string().optional()
     }),
   },
   generateSessionSummary: {
@@ -88,5 +95,41 @@ export const aiSchemas = {
           });
         }
       }),
+  },
+};
+
+export const matchSchemas = {
+  getRecommendedPartners: {
+    query: z.object({
+      page: z
+        .string()
+        .optional()
+        .refine(
+          (val) =>
+            val === undefined ||
+            (/^\d+$/.test(val) && parseInt(val, 10) >= 1 && parseInt(val, 10) <= 1000),
+          {
+            message: "page must be an integer between 1 and 1000",
+          }
+        ),
+      limit: z
+        .string()
+        .optional()
+        .refine((val) => val === undefined || (/^\d+$/.test(val) && parseInt(val) >= 1 && parseInt(val) <= 20), {
+          message: "limit must be an integer between 1 and 20",
+        }),
+    }),
+  },
+  getSupabaseDiscover: {
+    query: z.object({
+      search: z.string().optional(),
+      filter: z.string().optional(),
+      limit: z
+        .string()
+        .optional()
+        .refine((val) => val === undefined || (/^\d+$/.test(val) && parseInt(val) >= 1 && parseInt(val) <= 100), {
+          message: "limit must be an integer between 1 and 100",
+        }),
+    }),
   },
 };
